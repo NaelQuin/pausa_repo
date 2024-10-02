@@ -1,0 +1,9 @@
+FROM MEETING:
+	- Utilização de outros gases para prever cada gas
+		(Experiencia do Mateus)
+	- Artigo científico para mensurar a qualidade do ar
+		(A ser enviado)
+
+TAREFAS:
+	- Criação de um repositório para trabalho colaborativo com o
+	  Mateus;
