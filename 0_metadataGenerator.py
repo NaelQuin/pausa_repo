@@ -19,8 +19,8 @@ import numpy as np
 
 from pyidebug import debug
 
-DATASET_PATH = "./currentApproach/dataset/"
-MEATADA_OUTPUT_PATH = "./currentApproach/0_metadata.json"
+DATASET_PATH = "./dataset/"
+MEATADA_OUTPUT_PATH = "./0_metadata.json"
 
 FILL_DD = True
 TABLES_AMOUNT = None
