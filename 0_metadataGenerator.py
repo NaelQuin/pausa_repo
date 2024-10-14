@@ -7,6 +7,66 @@
   0.4. Export the metadata json file
 '''
 
+PARAMETRO_EXPLAIN = {
+    "ME": {
+        "1": ["HR", "Humidade Relativa média horária [%]"],
+        "2": ["PA", "Pressão Atmosférica média horária [mbar]"],
+        "3": ["PP", "Preciptação média mensal [mm]"],
+        "4": ["TEMP", "Temperatura média horária [graus Celsius]"],
+        "5": ["UV", "Ultravioleta unidade [quantidade]"],
+        "6": ["VD", "Vento Direção média horária [graus]"],
+        "7": ["VI", "Vento Intensidade média horária [km/h]"]
+    },
+
+    "QA": {
+        "1": ["NO2", "Dióxido de Azoto média horária [µg/m3]"],
+        "2": ["O3", "Ozono média horária [µg/m3]"],
+        "3": ["PM10", "Partículas suspensas menores que 10µm média horária [µg/m3]"],
+        "4": ["PM25", "Partículas suspensas menores que 2,5µm média horária [µg/m3]"],
+        "5": ["SO2", "Dióxido de Enxofre média horária [µg/m3]"],
+        "6": ["CO", "Monóxido de Carbono média horária [mg/m3]"]
+    },
+
+    "RUIDO": {
+        "1": ["LAEQ", "Nível sonoro contínuo equivalente [dB(A)]"],
+    },
+
+    "VTH": {
+        "1": ["VTH", "Volume de Tráfego Horário"]
+    }
+}
+
+'''
+    "PARAMETRO": {
+        "1": ["HR", "Humidade Relativa média horária (%)"],
+        "2": ["PA", "Pressão Atmosférica média horária (mbar)"],
+        "3": ["PP", "Preciptação média mensal (mm)"],
+        "4": ["TEMP", "Temperatura média horária (graus Celsius)"],
+        "5": ["UV", "Ultravioleta unidade (quantidade)"],
+        "6": ["VD", "Vento Direção média horária (graus)"],
+        "7": ["VI", "Vento Intensidade média horária (km/h)"]
+      },
+
+    "PARAMETRO": {
+        "1": ["CO", "Monóxido de Carbono média horária (mg/m3)"],
+        "2": ["NO", "Monóxido de Azoto média horária (µg/m3)"],
+        "3": ["NO2", "Dióxido de Azoto média horária (µg/m3)"],
+        "4": ["O3", "Ozono média horária (µg/m3)"],
+        "5": ["PM10", "Partículas suspensas menores que 10µm média horária (µg/m3)"],
+        "6": ["PM25", "Partículas suspensas menores que 2,5µm média horária (µg/m3)"],
+        "7": ["SO2", "Dióxido de Enxofre média horária (µg/m3)"],
+    },
+
+    "PARAMETRO": {
+        "1": ["LAEQ", "Nível sonoro contínuo equivalente média horária (dB(A))"],
+    },
+
+    "PARAMETRO": {
+        "1": ["VTH", "Volume de Tráfego Horário, número de veiculos por sentido/hora"]
+    }
+}
+'''
+
 import os
 import re
 import time
@@ -27,16 +87,17 @@ FILL_DD = True
 EXPORT_METADATA = True
 
 TABLES_AMOUNT = None
-
 SAMPLE_SIZE = None
+
 TOP_UNIQUE_VALUES = None
 PRINT_DELAY = None
 FORMAT_INT = False
 
 SKIP_TABLES = [
-    # "ME",
-    # "QA",
-    # "VTH"
+    "ME",
+    "QA",
+    "VTH",
+    #"RUIDO"
 ]
 
 VALUES_TO_SORT = {
@@ -60,7 +121,7 @@ VALUES_TO_SORT = {
 SUPPRESS_ARRAY = 15 # None: no suppress, any int for suppression
 
 CATEGORY = [
-    "PAUSA", "ME", "QA", "VTH"
+    "PAUSA", "ME", "QA", "VTH", "RUIDO"
 ]
 
 DD = {
@@ -190,6 +251,50 @@ DD = {
             "Measured value"
         ],
     },
+    "RUIDO": {
+        "DTM_UTC": [
+            "Datetime in UTC",
+        ],
+        "DTM_LOCAL": [
+            "Datetime in local time (Lisbon)",
+        ],
+        "TEMATICA": [
+            "Measurement category",
+        ],
+        "COD_PARAMETRO": [
+            "Noise id",
+        ],
+        "PARAMETRO": [
+            "Noise index",
+        ],
+        "NR_ESTACAO": [
+            "Sensor station id",
+        ],
+        "COD_SENSOR": [
+            "Sensor id",
+        ],
+        "LOCAL": [
+            "Sensor place",
+        ],
+        "LONGITUDE": [
+            "Longitude coordinate of the sensor",
+        ],
+        "LATITUDE": [
+            "Latitude coordinate of the sensor",
+        ],
+        "UNIDADE": [
+            "Measurement unit",
+        ],
+        "ETIQUETA_NIVEL": [
+            "Meaning of the criteria for issuing the Lisbon environmental index color",
+        ],
+        "COR_NIVEL": [
+            "Criteria for issuing the Lisbon environmental index color",
+        ],
+        "VALOR": [
+            "Measured value"
+        ],
+    },
     "VTH": {
         "DTM_UTC": [
             "Datetime in UTC",
@@ -265,6 +370,7 @@ CODEBOOK = {
     "ME": {},
     "QA": {},
     "VTH": {},
+    "RUIDO": {},
     # Template
     "VARS": [
         "UNIQUE_VALUES_RANGE",
@@ -276,7 +382,8 @@ metadata = {
     "PAUSA": {},
     'ME': {},
     'QA': {},
-    'VTH': {}
+    'RUIDO': {},
+    'VTH': {},
 }
 
 particularMetadata = {
@@ -296,7 +403,10 @@ particularMetadata = {
 
 def formatDate(values: pd.Series) -> (pd.Series):
 
-    currentFormat = "%Y-%m-%d %H:%M:%S.%f"
+    currentFormat = [
+        "%Y-%m-%d %H:%M:%S.%f", 
+        "%d-%m-%Y %H:%M", 
+    ][1]
     newFormat = "%Y%m%d.%H"
 
     formatedValues = values.apply(
@@ -346,6 +456,16 @@ def fixValues(
             "UNIDADE": {
                 "mg/m3     ": "mg/m3",
                 "\u00b5g/m3     ": "\u00b5g/m3",
+            },
+            "ETIQUETA_NIVEL": {
+                "@ NA": "@NA"
+            },
+        },
+
+        # Noise dataset
+        "RUIDO": {
+            "UNIDADE": {
+                "dB(A)     ": "dB(A)",
             },
             "ETIQUETA_NIVEL": {
                 "@ NA": "@NA"
@@ -548,6 +668,7 @@ def getDatasetMetadata(directory):
                 )
 
     return metadata
+
 
 def fillDD(
         DD: dict[str: list[str]],

@@ -12,11 +12,42 @@ import os
 import pandas as pd
 
 # Global parameters
-DATASET_PATH = "./currentApproach/dataset/"
-OUTPUT_DATASET = "./currentApproach/1_PAUSA.csv"
+DATASET_PATH = "./dataset/"
+OUTPUT_DATASET = "./1_PAUSA.csv"
 DROPOUT_COLUMNS = [
-    "DTM_UTC", "COD_PARAMETRO", "COD_SENSOR", "LOCAL", "COR_NIVEL"
+    "DTM_UTC", "COD_PARAMETRO", "COD_SENSOR", "LOCAL",
+    "LATITUDE", "LONGITUDE", "UNIDADE", "ETIQUETA_NIVEL",
+    "COR_NIVEL"
 ]
+
+PARAMETRO_UNIDADE = {
+    "ME": {
+        1: "%",
+        2: "mbar",
+        3: "mm",
+        4: "graus Celsius",
+        5: "quantidade",
+        6: "graus",
+        7: "km/h"
+    },
+
+    "QA": {
+        1: "μg/m3",
+        2: "μg/m3",
+        3: "μg/m3",
+        4: "μg/m3",
+        5: "μg/m3",
+        6: "mg/m3"
+    },
+
+    "RUIDO": {
+        1: "dB",
+    },
+
+    "VTH": {
+
+    }
+}
 
 # Get the list of datasets into folder
 datasets = os.listdir(DATASET_PATH)
@@ -25,7 +56,11 @@ datasets = os.listdir(DATASET_PATH)
 joinedDataset = pd.DataFrame()
 
 # Looping through the datasets
-for dataset in datasets:
+for i, dataset in enumerate(datasets):
+    print(
+        f"Processing dataset {i+1:02}/{len(datasets):02}: {dataset:<25}",
+        end="\r"
+    )
 
     # Skip VTH (Traffic) datasets
     if dataset.startswith("VTH"):
@@ -35,7 +70,7 @@ for dataset in datasets:
     dataset = pd.read_csv(
         f"{DATASET_PATH}/{dataset}",
         sep=",", low_memory=False,
-        encooding="utf-8"
+        encoding="utf-8"
     )
 
     # Dropout uneeded columns

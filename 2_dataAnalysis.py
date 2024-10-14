@@ -3,16 +3,10 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-DATASET_PATH = './currentApproach/dataset'
-
-if '.csv' not in DATASET_PATH:
-    files = [f for f in os.listdir(DATASET_PATH) if f.endswith('.csv')]
-
-if not any(files):
-    raise ValueError("No CSV files found in the dataset directory.")
+DATASET_FILE = './1_PAUSA.csv'
 
 # Load the dataset
-df = pd.read_csv(DATASET_PATH)
+df = pd.read_csv(DATASET_FILE)
 
 # Display basic information about the dataset
 print(df.info())

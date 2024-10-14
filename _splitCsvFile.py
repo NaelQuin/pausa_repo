@@ -1,21 +1,22 @@
 import chunk
 
 tables = [
-    "ME_2022_S1.csv",
-    "ME_2022_S2.csv",
-    "ME_2023_S1.csv",
-    "ME_2023_S2.csv",
-    "ME_2024_S1.csv",
-    "QA_2021_Q2.csv",
-    "QA_2021_Q3.csv",
-    "QA_2022_Q1.csv",
-    "QA_2022_Q2.csv",
-    "QA_2022_Q3.csv",
-    "QA_2023_Q1.csv",
-    "QA_2023_Q2.csv",
-    "QA_2023_Q3.csv",
-    "QA_2024_Q1.csv",
-    "VTH_ALL.csv"
+    # "ME_2022_S1.csv",
+    # "ME_2022_S2.csv",
+    # "ME_2023_S1.csv",
+    # "ME_2023_S2.csv",
+    # "ME_2024_S1.csv",
+    # "QA_2021_Q2.csv",
+    # "QA_2021_Q3.csv",
+    # "QA_2022_Q1.csv",
+    # "QA_2022_Q2.csv",
+    # "QA_2022_Q3.csv",
+    # "QA_2023_Q1.csv",
+    # "QA_2023_Q2.csv",
+    # "QA_2023_Q3.csv",
+    # "QA_2024_Q1.csv",
+    # "VTH_ALL.csv",
+    "RUIDO_ALL.csv",
 ]
 
 fileEncoding = {
@@ -37,8 +38,8 @@ preserveHead = True
 for i, file in enumerate(tables):
     print(f"[{i+1:02}/{len(tables):02}] Splitting table '{file:<14}'", end="\r")
 
-    inputFile = f"./currentApproach/dataset/{file}"
-    outputFile = f"./currentApproach/dataset/{file.replace('.csv', '_%02d.csv')}"
+    inputFile = f"./dataset/{file}"
+    outputFile = f"./dataset/{file.replace('.csv', '_%02d.csv')}"
 
     # print("Reading file", end="...")
     with open(inputFile, 'r', encoding=fileEncoding) as fIn:

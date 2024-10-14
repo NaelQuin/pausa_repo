@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, r2_score
 
-DATASET_PATH = './currentApproach/dataset/pausaDataset.csv'
+DATASET_PATH = './1_PAUSA.csv'
 SAMPLE_SIZE = 1000
 
 print("Beginning data loading process", end="...")
@@ -22,12 +22,13 @@ print("Done")
 
 print("Beginning data preprocessing", end="...")
 # Assuming the last column is the target variable
-X = data.iloc[:, :-1]
+X = data.iloc[:, :-2]
 y = data.iloc[:, -1]
+weights = data.iloc[:, -2]
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
+X_train, X_test, y_train, y_test, weight_train, weight_test = train_test_split(
+    X, y, weights, test_size=0.2, random_state=42
 )
 
 # Scale the features
@@ -39,23 +40,24 @@ print("Done")
 print("Beginning model training", end="...")
 # Train the Random Forest model
 rf_model = RandomForestClassifier(
-    n_estimators=100, random_state=42
+    n_estimators=100,
+    random_state=42
 )
-rf_model.fit(X_train_scaled, y_train)
-
 # Train a Gradient Boosting model for comparison
 gb_model = GradientBoostingClassifier(
     n_estimators=100,
     random_state=42
 )
-gb_model.fit(X_train_scaled, y_train)
-
 # Train an XGBoost model as an additional efficient predictor
 xgb_model = XGBClassifier(
     n_estimators=100,
     random_state=42
 )
-xgb_model.fit(X_train_scaled, y_train)
+
+# Fit models
+rf_model.fit(X_train_scaled, y_train, sample_weight=weight_train)
+gb_model.fit(X_train_scaled, y_train, sample_weight=weight_train)
+xgb_model.fit(X_train_scaled, y_train, sample_weight=weight_train)
 print("Done")
 
 print("Beginning model evaluation", end="...")
@@ -76,7 +78,6 @@ print(
     f"\tRandom Forest Accuracy: {rf_accuracy:.2f}",
     f"\tRandom Forest R2 Score: {rf_r2:.2f}",
     "\n\tRandom Forest Classification Report:",
-    "\033[5FDone",
     textwrap.indent(classification_report(y_test, rf_pred), "\t\t"),
     f"\n\tGradient Boosting Accuracy: {gb_accuracy:.2f}",
     f"\tGradient Boosting R2 Score: {gb_r2:.2f}",
