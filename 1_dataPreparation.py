@@ -13,7 +13,7 @@ import pandas as pd
 
 # Global parameters
 DATASET_PATH = "./currentApproach/dataset/"
-OUTPUT_DATASET = "./currentApproach/dataset/PAUSA.csv"
+OUTPUT_DATASET = "./currentApproach/1_PAUSA.csv"
 DROPOUT_COLUMNS = [
     "DTM_UTC", "COD_PARAMETRO", "COD_SENSOR", "LOCAL", "COR_NIVEL"
 ]

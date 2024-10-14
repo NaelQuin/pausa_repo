@@ -2,7 +2,8 @@
 # My own ignore choices
 # =====================
 original/
-documents/
+#documents/
+.gitignore
 
 # =======================
 # Automatically generated

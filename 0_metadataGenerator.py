@@ -7,12 +7,13 @@
   0.4. Export the metadata json file
 '''
 
-import time
 import os
-import json
 import re
+import time
+import json
+import datetime
 from typing import Any
-from copy import deepcopy
+from copy import deepcopy as copy
 
 import pandas as pd
 import numpy as np
@@ -23,13 +24,38 @@ DATASET_PATH = "./dataset/"
 MEATADA_OUTPUT_PATH = "./0_metadata.json"
 
 FILL_DD = True
-TABLES_AMOUNT = None
 EXPORT_METADATA = True
+
+TABLES_AMOUNT = None
 
 SAMPLE_SIZE = None
 TOP_UNIQUE_VALUES = None
 PRINT_DELAY = None
 FORMAT_INT = False
+
+SKIP_TABLES = [
+    # "ME",
+    # "QA",
+    # "VTH"
+]
+
+VALUES_TO_SORT = {
+    "COR_NIVEL": {
+        "CINZENTO": 1,
+        "VERDE": 2,
+        "AMARELO": 3,
+        "LARANJA": 4,
+        "ENCARNADO": 5,
+    },
+    "ETIQUETA_NIVEL": {
+        "@NA": 1,
+        "BAIXO": 2,
+        "NORMAL": 3,
+        "MODERADO": 4,
+        "ELEVADO": 5,
+        "MUITO ELEVADO": 6
+    }
+}
 
 SUPPRESS_ARRAY = 15 # None: no suppress, any int for suppression
 
@@ -84,7 +110,7 @@ DD = {
             "Datetime in local time (Lisbon)",
         ],
         "TEMATICA": [
-            "Measurement type",
+            "Measurement category",
         ],
         "COD_PARAMETRO": [
             "Meteorological parameter id",
@@ -128,7 +154,7 @@ DD = {
             "Datetime in local time (Lisbon)",
         ],
         "TEMATICA": [
-            "Measurement type",
+            "Measurement category",
         ],
         "COD_PARAMETRO": [
             "Gas or particles id",
@@ -172,7 +198,7 @@ DD = {
             "Datetime in local time (Lisbon)",
         ],
         "TEMATICA": [
-            "Measurement type",
+            "Measurement category",
         ],
         "COD_PARAMETRO": [
             "Traffic parameter id",
@@ -240,10 +266,10 @@ CODEBOOK = {
     "QA": {},
     "VTH": {},
     # Template
-    "VARS": {
-        "UNIQUE_VALUES": [],
-        "EXPLAINED": {},
-    },
+    "VARS": [
+        "UNIQUE_VALUES_RANGE",
+        "MEAN",
+    ],
 }
 
 metadata = {
@@ -267,6 +293,21 @@ particularMetadata = {
     }
 }
 
+
+def formatDate(values: pd.Series) -> (pd.Series):
+
+    currentFormat = "%Y-%m-%d %H:%M:%S.%f"
+    newFormat = "%Y%m%d.%H"
+
+    formatedValues = values.apply(
+        lambda v: eval(
+            datetime.datetime.strptime(v, currentFormat).strftime(newFormat)
+        )
+    )
+
+    return formatedValues
+
+
 def formatInt(number: int) -> (str):
     if number >= 1000000:
         output = f"{number // 1000000}M"
@@ -275,6 +316,54 @@ def formatInt(number: int) -> (str):
     else:
         output = str(number)
     return output
+
+
+def fixValues(
+        category: str,
+        column: str,
+        values: pd.Series
+        ) -> (pd.Series):
+
+    replacements = {
+        # Meteorological dataset
+        "ME": {
+            "UNIDADE": {
+                "          ": "",
+                "%         ": "%",
+                "km/h      ": "km",
+                "mbar      ": "mbar",
+                "mm        ": "mm",
+                "\u00ba         ": "\u00ba",
+                "\u00baC        ": "\u00baC",
+            },
+            "ETIQUETA_NIVEL": {
+                "@ NA": "@NA"
+            },
+        },
+
+        # Air quality dataset
+        "QA": {
+            "UNIDADE": {
+                "mg/m3     ": "mg/m3",
+                "\u00b5g/m3     ": "\u00b5g/m3",
+            },
+            "ETIQUETA_NIVEL": {
+                "@ NA": "@NA"
+            },
+        },
+
+        # Traffic dataset
+        "VTH": {
+            "UNIDADE": {
+                "Ve\u00edculos  ": "Ve\u00edculos",
+            },
+        }
+    }[category][column]
+
+    fixedValues = values.replace(replacements)
+
+    return fixedValues
+
 
 def getMissingNonemptyAmount(df) -> (tuple[int, int]):
     missing = df.isna().sum().sum()
@@ -285,14 +374,19 @@ def getMissingNonemptyAmount(df) -> (tuple[int, int]):
 
 
 def getDatasetMetadata(directory):
-    # MECols = set()
-    # QACols = set()
-    # VTHCols = set()
 
+    # Getting all filenames in directory
     files = os.listdir(directory)[:TABLES_AMOUNT]
 
+    # Break a line in console
     print()
+
+    # Looping in filenames
     for i, filename in enumerate(files):
+
+        if any([key in filename for key in SKIP_TABLES]):
+            continue
+
         # Get the dataset category
         category = filename.split("_")[0]
 
@@ -304,7 +398,7 @@ def getDatasetMetadata(directory):
             currentMetadata = metadata[category]
         else:
             # Initialize current metadata
-            currentMetadata = deepcopy(particularMetadata)
+            currentMetadata = copy(particularMetadata)
 
             # Fill the DD and CODEBOOK
             currentMetadata['DD'] = DD[category]
@@ -351,6 +445,14 @@ def getDatasetMetadata(directory):
                     end="\r"
                 )
 
+                if column in ["UNIDADE", "ETIQUETA_NIVEL"]:
+                    # Fix some values
+                    df[column] = fixValues(category, column, df[column])
+
+                elif "DTM" in column:
+                    # Format datetime
+                    df[column] = formatDate(df[column])
+
                 if column not in currentMetadata["INFO"]["TVARS"]:
                     # Initialize the column key
                     currentMetadata["INFO"]["TVARS"][column] = []
@@ -374,13 +476,6 @@ def getDatasetMetadata(directory):
             if not any(metadata[category]):
                 # Update the metadata
                 metadata[category] = currentMetadata
-
-            # if "ME" in filename:
-            #     MECols |= set(file_metadata['columns'])
-            # elif "QA" in filename:
-            #     QACols |= set(file_metadata['columns'])
-            # elif "VTH" in filename:
-            #     VTHCols |= set(file_metadata['columns'])
 
     for category in metadata:
 
@@ -457,49 +552,77 @@ def getDatasetMetadata(directory):
 def fillDD(
         DD: dict[str: list[str]],
         values: dict[str: Any],
-        deepcopy: bool = False,
         codebook: dict[str: str] = None
         ) -> dict[str: list[str]]:
     """
     Fill the dictionary with the values
     """
-    if deepcopy:
-        DD = deepcopy(DD)
-        codebook = deepcopy(codebook)
 
     for k, v in values.items():
 
         if k not in DD:
+            # Init a DD list to respective key
             v = DD[k] = []
 
         if numberDate(v[0]):
-            DD[k].insert(0, f"{v[0]} -- {v[-1]}")
-        elif codebook is not None:
+            # Set the range of values string
+            rangeOfValues = f"{v[0]} -- {v[-1]}"
+
+            # Insert range of values into first position
+            DD[k].insert(0, rangeOfValues)
+
             if k not in codebook:
+                # Init respective dictionary
                 codebook[k] = {}
 
+            # Add the respective range of values into codebook
+            codebook[k][rangeOfValues] = "Range of values"
+
+        elif codebook is not None:
+
+            if k not in codebook:
+                # Init respective dictionary
+                codebook[k] = {}
+
+            if k in VALUES_TO_SORT:
+                v = sorted(v, key=lambda x: VALUES_TO_SORT[k][x])
+
+            # Looping in each values
             for i, vi in enumerate(v):
+                # Append the map (code, value)
                 codebook[k][i+1] = vi
+
+            # Insert range of values into first position
             DD[k].insert(0, f"1 -- {i+1}")
 
+    # Set the output format
     output = DD\
         if codebook is None\
         else DD, codebook
 
     return output
 
+
 def numberDate(value):
 
+    # Numbers
     if type(value) in (int, float):
         output = True
+
+    # Datetime
     elif re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d$", str(value)):
         output = True
+
+    # Numbers in string
     elif type(value) is str and (value.isdigit() or all(n.isdigit() for n in value.split('.'))):
         output = True
+
+    # Others
     else:
         output = False
 
     return output
+
 
 def exportMetadata(metadata, output_file):
     with open(output_file, 'w', encoding="utf-8") as f:
@@ -508,8 +631,7 @@ def exportMetadata(metadata, output_file):
 
 
 def suppressArray(metadata, suppressSize=SUPPRESS_ARRAY):
-    suppressed = False
-    output = deepcopy(metadata)
+    output = copy(metadata)
     for k, v in output.items():
         if type(v) is dict:
             output[k] = suppressArray(v, suppressSize)
@@ -518,6 +640,7 @@ def suppressArray(metadata, suppressSize=SUPPRESS_ARRAY):
                 output[k] = v[:suppressSize] + ["..."] + v[-suppressSize:]
 
     return output
+
 
 if __name__ == "__main__":
     print("Reading files from DATASET_PATH", end="...\n")
