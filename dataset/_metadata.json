@@ -915,7 +915,7 @@
         "4": ["O3", "Ozono média horária (µg/m3)"],
         "5": ["PM10", "Partículas suspensas menores que 10µm média horária (µg/m3)"],
         "6": ["PM25", "Partículas suspensas menores que 2,5µm média horária (µg/m3)"],
-        "7": ["SO2", "Dióxido de Enxofre média horária (µg/m3)"],
+        "7": ["SO2", "Dióxido de Enxofre média horária (µg/m3)"]
       },
       "NR_ESTACAO": {
         "1 -- 80": "Range of values"

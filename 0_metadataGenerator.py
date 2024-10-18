@@ -32,40 +32,9 @@ PARAMETRO_EXPLAIN = {
     },
 
     "VTH": {
-        "1": ["VTH", "Volume de Tráfego Horário"]
+        "1": ["VTH", "Volume de Tráfego por Hora"]
     }
 }
-
-'''
-    "PARAMETRO": {
-        "1": ["HR", "Humidade Relativa média horária (%)"],
-        "2": ["PA", "Pressão Atmosférica média horária (mbar)"],
-        "3": ["PP", "Preciptação média mensal (mm)"],
-        "4": ["TEMP", "Temperatura média horária (graus Celsius)"],
-        "5": ["UV", "Ultravioleta unidade (quantidade)"],
-        "6": ["VD", "Vento Direção média horária (graus)"],
-        "7": ["VI", "Vento Intensidade média horária (km/h)"]
-      },
-
-    "PARAMETRO": {
-        "1": ["CO", "Monóxido de Carbono média horária (mg/m3)"],
-        "2": ["NO", "Monóxido de Azoto média horária (µg/m3)"],
-        "3": ["NO2", "Dióxido de Azoto média horária (µg/m3)"],
-        "4": ["O3", "Ozono média horária (µg/m3)"],
-        "5": ["PM10", "Partículas suspensas menores que 10µm média horária (µg/m3)"],
-        "6": ["PM25", "Partículas suspensas menores que 2,5µm média horária (µg/m3)"],
-        "7": ["SO2", "Dióxido de Enxofre média horária (µg/m3)"],
-    },
-
-    "PARAMETRO": {
-        "1": ["LAEQ", "Nível sonoro contínuo equivalente média horária (dB(A))"],
-    },
-
-    "PARAMETRO": {
-        "1": ["VTH", "Volume de Tráfego Horário, número de veiculos por sentido/hora"]
-    }
-}
-'''
 
 import os
 import re

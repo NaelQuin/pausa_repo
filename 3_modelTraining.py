@@ -1,3 +1,37 @@
+"""
+METODOLOGIA
+
+I. PREPARAÇÃO
+=============
+1. Agrupar pela estação/local;
+
+
+II. TREINAMENTO
+===============
+2. Treinar um modelo para cada gás, preferencialmente:
+    - NO2
+    - O3    (São os que demandam alertas à população)
+    - SO2
+
+3. No treinamento do respetivo gás, considerar todos os outros parámetros,
+   metereológicos e outros gases;
+
+4. Usar como target value a média horária do respetivo gás;
+
+
+III. REFINAMENTO
+================
+5. Considerar pesos para os parámetros ME e QA:
+    - A princípio 0.5 e 0.5;
+    - Depois ajustar e verificar influência na acurácia do modelo;
+    - Se necessário, considerar dentro do QA, pesos distintos para
+      diferentes gases;
+
+6. Em último caso, considerar Volume de Tráfego por Hora e Nível de Ruído,
+   para algumas estações;
+"""
+
+
 import os
 import textwrap
 
@@ -9,14 +43,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, r2_score
 
-DATASET_PATH = './1_PAUSA.csv'
+DATASET_FOLDER = './'
+
 SAMPLE_SIZE = 1000
 
 print("Beginning data loading process", end="...")
 # Load the dataset
 data = pd.read_csv(
     DATASET_PATH, 
-    sep=',', nrows=SAMPLE_SIZE, index_col=0
+    sep=',', nrows=SAMPLE_SIZE
 )
 print("Done")
 
